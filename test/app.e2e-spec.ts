@@ -18,7 +18,7 @@ describe('AppController (e2e)', () => {
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true, //맞지 않는 걸 보내면 접근조차 못하게 막는다.
-        forbidNonWhitelisted: true, // 누군가 이상한 걸 보내면, 리쉐스트 자체를 막는 기능
+        forbidNonWhitelisted: true, // 누군가 이상한 걸 보내면, 리퀘스트 자체를 막는 기능
         transform: true, //클라이언트에서 보낸 데이터 타입을 서버에서 필요한 타입으로 변경
       }),
     );
@@ -33,7 +33,7 @@ describe('AppController (e2e)', () => {
     it('GET', () => {
       return request(app.getHttpServer()).get('/movies').expect(200).expect([]);
     });
-    it('POST', () => {
+    it('POST 201', () => {
       return request(app.getHttpServer())
         .post('/movies')
         .send({
@@ -42,6 +42,17 @@ describe('AppController (e2e)', () => {
           genres: ['Test'],
         })
         .expect(201);
+    });
+    it('POST 400', () => {
+      return request(app.getHttpServer())
+        .post('/movies')
+        .send({
+          title: 'Test',
+          year: 2023,
+          genres: ['Test'],
+          other: 'thing', //지정되지 않은 key,value 값 보내기
+        })
+        .expect(400); //forbidNonWhitelisted가 true이기 때문에 400에러를 보내줄꺼임
     });
     it('DELETE', () => {
       return request(app.getHttpServer()).delete('/movies').expect(404);
@@ -54,6 +65,15 @@ describe('AppController (e2e)', () => {
     });
     it('GET 404', () => {
       return request(app.getHttpServer()).get('/movies/999').expect(404);
+    });
+    it('PATCH 200', () => {
+      return request(app.getHttpServer())
+        .patch('/movies/1')
+        .send({ title: 'Updated Test' })
+        .expect(200);
+    });
+    it('DELETE 200', () => {
+      return request(app.getHttpServer()).delete('/movies/1').expect(200);
     });
   });
 });
